@@ -383,3 +383,18 @@ pub struct GameSettings {
     /// Unused space, will allways be memset on deserialization
     pub unused_space: [u8; 0x110],
 }
+
+#[cfg(test)]
+mod tests {
+    use std::mem::offset_of;
+
+    use super::GameDataMan;
+
+    #[test]
+    fn public_layout_offsets_match_static_re() {
+        assert_eq!(0x60, offset_of!(GameDataMan, menu_system_save_load));
+        assert_eq!(0x68, offset_of!(GameDataMan, menu_profile_save_load));
+        assert_eq!(0x70, offset_of!(GameDataMan, key_config_save_load));
+        assert_eq!(0x78, offset_of!(GameDataMan, profile_summary));
+    }
+}

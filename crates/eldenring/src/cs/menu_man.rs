@@ -174,6 +174,8 @@ pub struct FeSystemAnnounceViewModelMessageQueue {
 
 #[cfg(test)]
 mod test {
+    use std::mem::{offset_of, size_of};
+
     use crate::cs::{
         BackScreenData, CSMenuData, CSMenuGaitemUseState, CSMenuManImp, CSPlayerMenuCtrl,
         CSPopupMenu, FeSystemAnnounceViewModel, FeSystemAnnounceViewModelMessageQueue,
@@ -191,5 +193,13 @@ mod test {
         assert_eq!(0x28, size_of::<LoadingScreenData>());
         assert_eq!(0x40, size_of::<FeSystemAnnounceViewModel>());
         assert_eq!(0x30, size_of::<FeSystemAnnounceViewModelMessageQueue>());
+    }
+
+    #[test]
+    fn public_layout_offsets_match_static_re() {
+        assert_eq!(0x08, offset_of!(CSMenuManImp, menu_data));
+        assert_eq!(0x80, offset_of!(CSMenuManImp, popup_menu));
+        assert_eq!(0x88, offset_of!(CSMenuManImp, window_job));
+        assert_eq!(0xb0, offset_of!(CSPopupMenu, current_top_menu_job));
     }
 }
