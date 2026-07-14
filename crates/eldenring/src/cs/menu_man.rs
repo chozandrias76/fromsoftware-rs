@@ -43,13 +43,13 @@ pub const STATUS_MESSAGE_MENU_TEXT: i32 = 41;
 #[shared::singleton("CSMenuMan")]
 pub struct CSMenuManImp {
     vftable: usize,
-    menu_data: usize,
+    pub menu_data: usize,
     player_status_calculator: usize,
     unk18: [u8; 2],
     pub disable_mouse_cursor: bool,
     unk1b: [u8; 0x65],
     pub popup_menu: Option<NonNull<CSPopupMenu>>,
-    window_job: usize,
+    pub window_job: usize,
     unk90: [u8; 0xAC],
     /// disables all save menu callbacks
     /// additionally, can disable auto save
@@ -107,7 +107,7 @@ pub struct CSPopupMenu {
     unk10: usize,
     unk18: usize,
     unk20: [u8; 0x90],
-    current_top_menu_job: usize,
+    pub current_top_menu_job: usize,
     unkb8: [u8; 0xb0],
     input_data: u64,
     unk170: [u8; 0x120],

@@ -127,6 +127,10 @@ class = "CS::CSThrowNode"
 vftable = "csthrow_node_vmt"
 
 [[vmts]]
+class = "CS::TitleStep"
+vftable = "title_step_vmt"
+
+[[vmts]]
 class = "CS::CSRideNode"
 vftable = "csride_node_vmt"
 
@@ -342,6 +346,14 @@ pattern = "48 8b 05 $ { ' } 48 8b 80 90 0d 00 00 c3"
 [[patterns]]
 captures = ["", "game_data_man"]
 pattern = "48 89 05 ${ ' } 48 83 c4 38 e9 ${}"
+
+[[patterns]]
+captures = ["", "cs_system_step"]
+pattern = "48 89 05 ${ ' } 48 8b 0d [4] 48 85 c9 75"
+
+[[patterns]]
+captures = ["", "title_step_state_table"]
+pattern = "48 8d 15 ${ ' } e8 [4] 48 8d 05 [4] 48 89 07"
 
 [[patterns]]
 captures = ["", "crypto_spi_registry"]
