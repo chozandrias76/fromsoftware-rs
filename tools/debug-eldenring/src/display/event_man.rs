@@ -3,6 +3,7 @@ use eldenring::cs::CSEventSosSignData;
 use hudhook::imgui::Ui;
 
 use debug::UiExt;
+use eldenring::cs::CSEventBloodStainCtrl;
 use eldenring::cs::CSEventManImp;
 use eldenring::cs::CSEventScriptEventInfo;
 use eldenring::cs::CSEventWorldAreaTimeCtrl;
@@ -18,6 +19,16 @@ impl DebugDisplay for CSEventManImp {
         ui.nested("CSEventSosSignCtrl", &self.sos_sign);
         ui.nested("CSEventScriptEventInfo", &self.script);
         ui.nested("CSEventWorldAreaTimeCtrl", &self.world_area_time);
+        ui.nested("Bloodstain", &self.bloodstain);
+    }
+}
+
+impl DebugDisplay for CSEventBloodStainCtrl {
+    fn render_debug(&self, ui: &Ui) {
+        match self.bloodstain_man() {
+            Some(ptr) => ui.display_copiable("Bloodstain Manager", format!("{:p}", ptr.as_ptr())),
+            None => ui.text("Bloodstain Manager: None"),
+        }
     }
 }
 

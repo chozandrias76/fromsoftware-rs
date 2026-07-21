@@ -1,33 +1,57 @@
+use std::ptr::NonNull;
+
 use hudhook::imgui::{TableColumnSetup, Ui};
 
 use debug::UiExt;
-use eldenring::cs::{
-    CSGaitemGameData, GameDataMan, GameSettings, GameVersionData, TrophyAccessoryStats,
-    TrophyEquipData, TrophyGoodsStats, TrophyWeaponStats,
-};
+use eldenring::cs::*;
 
 use super::{DebugDisplay, DisplayUiExt};
+
+fn nested_ptr<T: DebugDisplay>(ui: &Ui, label: impl AsRef<str>, ptr: Option<NonNull<T>>) {
+    ui.nested_opt(label, ptr.map(|value| unsafe { value.as_ref() }));
+}
+
+fn format_play_time(milliseconds: u32) -> String {
+    let hours = milliseconds / 3_600_000;
+    let minutes = (milliseconds % 3_600_000) / 60_000;
+    let seconds = (milliseconds % 60_000) / 1000;
+    let millis = milliseconds % 1000;
+    format!("{hours}:{minutes:02}:{seconds:02}.{millis:03} ({milliseconds} ms)")
+}
+
+fn byte_preview(bytes: &[u8], max: usize) -> String {
+    let shown = bytes
+        .iter()
+        .take(max)
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    if bytes.len() > max {
+        format!("{shown} … ({} bytes)", bytes.len())
+    } else {
+        format!("{shown} ({} bytes)", bytes.len())
+    }
+}
 
 impl DebugDisplay for GameDataMan {
     fn render_debug(&self, ui: &Ui) {
         ui.nested("Trophy Data", &self.trophy_equip_data);
         ui.display("Death Count", self.death_count);
-        ui.header("Play Time", || {
-            let hours = self.play_time / 3_600_000;
-            let minutes = (self.play_time % 3_600_000) / 60_000;
-            let seconds = (self.play_time % 60_000) / 1000;
-            let milliseconds = self.play_time % 1000;
-            ui.text(format!(
-                "{}:{:02}:{:02}.{:03} ({} ms)",
-                hours, minutes, seconds, milliseconds, self.play_time
-            ));
-        });
+        ui.display("Play Time", format_play_time(self.play_time));
         ui.display("NG Level", self.ng_lvl);
+        ui.display("Random Appearance Lot Slot", self.random_appear_lot_slot);
         ui.debug("Post Map Load Chr Type", self.post_map_load_chr_type);
         ui.nested("Gaitem Game Data", &self.gaitem_game_data);
 
         ui.separator();
+        ui.display("Has Bloodstain", self.has_bloodstain);
+        nested_ptr(ui, "Bloodstain", self.bloodstain);
+        ui.display("Bloodstain Entity ID", self.bloodstain_entity_id);
+
+        ui.separator();
         ui.display("Boss Fight Active", self.boss_fight_active);
+        ui.display("Is In Boss Fight", self.is_in_boss_fight);
         ui.debug("Boss Fight Timer", self.boss_fight_timer.time);
         ui.display("Boss Health Bar Entity ID", self.boss_health_bar_entity_id);
         ui.display(
@@ -46,6 +70,7 @@ impl DebugDisplay for GameDataMan {
 
         ui.separator();
         ui.display("Request Full Recovery", self.request_full_recovery);
+        ui.display("Request Restore HP", self.request_restore_hp);
         ui.display(
             "Award Phantom Great Rune",
             self.award_phantom_great_rune_requested,
@@ -65,10 +90,20 @@ impl DebugDisplay for GameDataMan {
         );
 
         ui.nested("Main Player Game Data", &self.main_player_game_data);
+        nested_ptr(
+            ui,
+            "Quickmatch Scaling Baseline Game Data",
+            self.quickmatch_scaling_baseline_game_data,
+        );
         ui.nested("Game Settings", &self.game_settings);
         ui.nested("Game Version Data", &self.game_version_data);
+        nested_ptr(ui, "Menu System Save/Load", self.menu_system_save_load);
+        nested_ptr(ui, "Menu Profile Save/Load", self.menu_profile_save_load);
+        nested_ptr(ui, "Key Config Save/Load", self.key_config_save_load);
+        nested_ptr(ui, "Profile Summary", self.profile_summary);
 
         ui.separator();
+        ui.display("DLC List Up To Date", self.dlc_list_up_to_date);
         ui.header("DLC List", || {
             ui.table(
                 "dlc-list",
@@ -131,6 +166,231 @@ impl DebugDisplay for GameDataMan {
             self.session_player_game_data_list.iter(),
             |ui, i, item| ui.nested_opt(format!("Slot {}", i), item.as_ref()),
         );
+    }
+}
+
+impl DebugDisplay for GameDataManBloodstainData {
+    fn render_debug(&self, ui: &Ui) {
+        ui.nested("MSB Position", self.msb_position);
+        ui.nested("Rotation", self.rotation);
+        ui.display("Base Hero Point 2", self.base_hero_point_2);
+        ui.display("Rune Count", self.rune_count);
+        ui.debug("Block ID", self.block_id);
+        ui.display("Has Death Blight Effect", self.has_death_blight_effect);
+    }
+}
+
+impl DebugDisplay for CSMenuSaveLoad {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Definition ID", self.definition_id);
+        ui.display("Definition Variant", self.definition_variant);
+        ui.display("Serialized Capacity Bytes", self.serialized_capacity_bytes);
+    }
+}
+
+impl DebugDisplay for FaceData {
+    fn render_debug(&self, ui: &Ui) {
+        ui.nested("Face Data Buffer", &self.face_data_buffer);
+    }
+}
+
+impl DebugDisplay for FaceDataBuffer {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display_copiable("Magic", byte_preview(&self.magic, self.magic.len()));
+        ui.display("Version", self.version);
+        ui.display("Buffer Size", self.buffer_size);
+        ui.display_copiable("Buffer Preview", byte_preview(&self.buffer, 32));
+    }
+}
+
+impl DebugDisplay for CSMenuFaceData {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Header", self.header);
+        ui.nested("Face Data Buffer", &self.face_data_buffer);
+        ui.display("Footer", self.footer);
+    }
+}
+
+impl DebugDisplay for CSMenuSystemSaveLoadFaceChunk {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Entry Count", self.entries.len());
+        ui.display("Entry Capacity", self.entries.capacity());
+        ui.list("Face Entries", self.entries.iter(), |ui, i, face| {
+            ui.nested(format!("Face {i}"), face);
+        });
+    }
+}
+
+impl DebugDisplay for DetailStatusViewStateEntry {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Selected Index", self.selected_index());
+        ui.display("Scroll Position", self.scroll_position());
+        ui.display("Packed View State", self.packed_view_state());
+        ui.display("Active", self.active);
+    }
+}
+
+impl DebugDisplay for DetailStatusViewStateSaveData {
+    fn render_debug(&self, ui: &Ui) {
+        ui.table(
+            "detail-status-view-state",
+            [
+                TableColumnSetup::new("Index"),
+                TableColumnSetup::new("Selected"),
+                TableColumnSetup::new("Scroll"),
+                TableColumnSetup::new("Packed"),
+                TableColumnSetup::new("Active"),
+            ],
+            self.entries.iter(),
+            |ui, i, entry| {
+                ui.table_next_column();
+                ui.text(format!("{i}"));
+                ui.table_next_column();
+                ui.text(format!("{}", entry.selected_index()));
+                ui.table_next_column();
+                ui.text(format!("{}", entry.scroll_position()));
+                ui.table_next_column();
+                ui.text(format!("{}", entry.packed_view_state()));
+                ui.table_next_column();
+                ui.text(format!("{}", entry.active));
+            },
+        );
+    }
+}
+
+impl DebugDisplay for MenuInputHistoryPayloadStorage {
+    fn render_debug(&self, ui: &Ui) {
+        let bytes = self.as_bytes();
+        ui.display("Byte Count", bytes.len());
+        ui.display(
+            "Non-Zero Byte Count",
+            bytes.iter().filter(|byte| **byte != 0).count(),
+        );
+        ui.display_copiable("Payload Preview", byte_preview(bytes, 64));
+    }
+}
+
+impl DebugDisplay for MenuInputHistorySaveData {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Header Word 0", self.header_word_0);
+        ui.display("Header Word 2", self.header_word_2);
+        ui.display("Payload Byte Count", self.payload_byte_count);
+        ui.nested("Payload Storage", &self.payload_storage);
+    }
+}
+
+impl DebugDisplay for MenuTitleFlowSaveData {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Save Slot", self.save_slot);
+        ui.display("Flags", self.flags);
+    }
+}
+
+impl<T: DebugDisplay> DebugDisplay for CSMenuSimpleSaveDataChunk<T> {
+    fn render_debug(&self, ui: &Ui) {
+        ui.nested("Data", &self.data);
+    }
+}
+
+impl DebugDisplay for MenuSortState {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display("Raw", self.raw());
+        ui.display("High Bit Flag", self.high_bit_flag());
+        ui.display("Value Bits", self.value_bits());
+    }
+}
+
+impl DebugDisplay for MenuSortStates {
+    fn render_debug(&self, ui: &Ui) {
+        ui.table(
+            "menu-sort-states",
+            [
+                TableColumnSetup::new("Index"),
+                TableColumnSetup::new("Raw"),
+                TableColumnSetup::new("High Bit"),
+                TableColumnSetup::new("Value Bits"),
+            ],
+            self.as_ref().iter(),
+            |ui, i, state| {
+                ui.table_next_column();
+                ui.text(format!("{i}"));
+                ui.table_next_column();
+                ui.text(format!("{}", state.raw()));
+                ui.table_next_column();
+                ui.text(format!("{}", state.high_bit_flag()));
+                ui.table_next_column();
+                ui.text(format!("{}", state.value_bits()));
+            },
+        );
+    }
+}
+
+impl DebugDisplay for CSMenuSystemSaveLoad {
+    fn render_debug(&self, ui: &Ui) {
+        ui.nested("Base", &self.base);
+        ui.nested("Face Chunk", &self.face_chunk);
+        ui.nested("Title Flow Save Data", &self.title_flow_save_data);
+        ui.nested("Detail Status View State", &self.detail_status_view_state);
+        ui.nested("Menu Input History", &self.menu_input_history);
+        ui.nested("Menu Sort States", &self.menu_sort_states);
+    }
+}
+
+impl DebugDisplay for ProfileSummaryCharacterName {
+    fn render_debug(&self, ui: &Ui) {
+        ui.display_copiable("Name", self.to_string_lossy());
+        ui.display("UTF-16 Code Units", self.code_units_until_nul().len());
+    }
+}
+
+impl DebugDisplay for ProfileSummaryRecord {
+    fn render_debug(&self, ui: &Ui) {
+        ui.nested("Name", &self.name);
+        ui.display("Level", self.level);
+        ui.display("Play Time", format_play_time(self.play_time));
+        ui.display("Rune Memory", self.rune_memory);
+        ui.display("Map", self.map);
+        ui.nested("Face Data", &self.face_data);
+        ui.nested("Character Assembly", &self.chr_asm);
+        ui.display("Gender", self.gender);
+        ui.display("Archetype", self.archetype);
+        ui.display("Starting Gift", self.starting_gift);
+        ui.display("Player Game Data Unk C4", self.player_game_data_unkc4);
+    }
+}
+
+impl DebugDisplay for ProfileSummary {
+    fn render_debug(&self, ui: &Ui) {
+        ui.table(
+            "profile-summary-records",
+            [
+                TableColumnSetup::new("Slot"),
+                TableColumnSetup::new("Name"),
+                TableColumnSetup::new("Level"),
+                TableColumnSetup::new("Play Time"),
+                TableColumnSetup::new("Runes"),
+                TableColumnSetup::new("Map"),
+            ],
+            self.records.iter(),
+            |ui, i, record| {
+                ui.table_next_column();
+                ui.text(format!("{i}"));
+                ui.table_next_column();
+                ui.text(record.name.to_string_lossy());
+                ui.table_next_column();
+                ui.text(format!("{}", record.level));
+                ui.table_next_column();
+                ui.text(format_play_time(record.play_time));
+                ui.table_next_column();
+                ui.text(format!("{}", record.rune_memory));
+                ui.table_next_column();
+                ui.text(format!("{}", record.map));
+            },
+        );
+
+        ui.list("Profile Records", self.records.iter(), |ui, i, record| {
+            ui.nested(format!("Slot {i}"), record);
+        });
     }
 }
 

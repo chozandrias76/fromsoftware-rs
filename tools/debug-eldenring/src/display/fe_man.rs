@@ -10,6 +10,11 @@ use crate::display::{DebugDisplay, DisplayUiExt};
 impl DebugDisplay for CSFeManImp {
     fn render_debug(&self, ui: &Ui) {
         ui.debug("HUD State", self.hud_state);
+        ui.display(
+            "Front-End Overlay Input Active",
+            self.front_end_overlay_input_active(),
+        );
+        ui.display("Disable Updates", self.disable_updates);
         ui.nested("Debug Tag", &self.debug_tag);
 
         ui.list(

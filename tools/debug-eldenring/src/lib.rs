@@ -57,6 +57,8 @@ struct EldenRingDebugGui {
     // Resources
     task_group: StaticDebugger<CSTaskGroup>,
     task: StaticDebugger<CSTaskImp>,
+    system_step: StaticDebugger<CSSystemStep>,
+    msg_repository: StaticDebugger<MsgRepositoryImp>,
     param_repository: StaticDebugger<FD4ParamRepository>,
 
     // Render
@@ -65,7 +67,8 @@ struct EldenRingDebugGui {
     sfx: StaticDebugger<CSSfxImp>,
     world_scene_draw_param: StaticDebugger<CSWorldSceneDrawParamManager>,
 
-    // Front ENd
+    // Front End
+    menu: StaticDebugger<CSMenuManImp>,
     fe: StaticDebugger<CSFeManImp>,
 }
 
@@ -166,6 +169,8 @@ unsafe fn render_live_reload(gui: &mut EldenRingDebugGui, ui: &mut Ui) {
             if let Some(item) = ui.tab_item("Resources") {
                 gui.task_group.render_debug(ui);
                 gui.task.render_debug(ui);
+                gui.system_step.render_debug(ui);
+                gui.msg_repository.render_debug(ui);
                 gui.param_repository.render_debug(ui);
                 item.end();
             }
@@ -179,6 +184,7 @@ unsafe fn render_live_reload(gui: &mut EldenRingDebugGui, ui: &mut Ui) {
             }
 
             if let Some(item) = ui.tab_item("Front End") {
+                gui.menu.render_debug(ui);
                 gui.fe.render_debug(ui);
                 item.end();
             }
