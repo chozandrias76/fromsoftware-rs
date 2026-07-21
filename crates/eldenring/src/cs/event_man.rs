@@ -28,7 +28,7 @@ pub struct CSEventManImp {
     unk68: usize,
     obj_act_exec: usize,
     unk78: usize,
-    bloodstain: usize,
+    pub bloodstain: OwnedPtr<CSEventBloodStainCtrl>,
     pub script: OwnedPtr<CSEventScriptEventInfo>,
     corpse: usize,
     unk98: usize,
@@ -79,6 +79,18 @@ pub struct CSEventSosSignCtrl {
     /// Character current summon param type
     pub summon_param_type: SummonParamType,
     unk54: i32,
+}
+
+#[repr(C)]
+pub struct CSEventBloodStainCtrl {
+    vftable: usize,
+    pub bloodstain_man: Option<NonNull<()>>,
+}
+
+impl CSEventBloodStainCtrl {
+    pub fn bloodstain_man(&self) -> Option<NonNull<()>> {
+        self.bloodstain_man
+    }
 }
 
 #[repr(C)]
@@ -249,5 +261,20 @@ impl TimeTransitionParams {
             add_seconds: seconds,
             ..Default::default()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::mem::{offset_of, size_of};
+
+    use super::{CSEventBloodStainCtrl, CSEventManImp};
+
+    #[test]
+    fn bloodstain_controller_layout_matches_static_re() {
+        assert_eq!(0x80, offset_of!(CSEventManImp, bloodstain));
+        assert_eq!(0x00, offset_of!(CSEventBloodStainCtrl, vftable));
+        assert_eq!(0x08, offset_of!(CSEventBloodStainCtrl, bloodstain_man));
+        assert_eq!(0x10, size_of::<CSEventBloodStainCtrl>());
     }
 }

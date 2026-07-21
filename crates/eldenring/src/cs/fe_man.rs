@@ -19,6 +19,9 @@ pub enum CSFeManHudState {
     Default = 3,
 }
 
+/// Native menu-input id used by `CSFeManImp` to report front-end overlay activity.
+const CS_FE_OVERLAY_MENU_INPUT_INDEX: usize = 2;
+
 #[repr(C)]
 /// Source of name: RTTI
 #[shared::singleton("CSFeMan")]
@@ -109,6 +112,15 @@ pub struct CSFeManImp {
     /// Tag of the debug player
     pub debug_tag: TagHudData,
     unk83f0: [u8; 48],
+}
+
+impl CSFeManImp {
+    pub fn front_end_overlay_input_active(&self) -> bool {
+        let menu_man = unsafe { self.menu_man.as_ref() };
+        menu_man
+            .menu_input_flags_at(CS_FE_OVERLAY_MENU_INPUT_INDEX)
+            .is_some_and(|flags| flags.is_down() && flags.triggered())
+    }
 }
 
 #[repr(C)]

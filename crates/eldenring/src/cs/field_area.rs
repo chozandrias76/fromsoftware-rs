@@ -14,11 +14,25 @@ pub struct FieldArea {
     world_info_owner_2: NonNull<WorldInfoOwner>,
     // TODO: rest
     unk20: [u8; 0x80],
-    // Flag to check if fast travel should be enabled.
+    /// Event flag controlling whether fast travel is enabled for this field area.
+    ///
+    /// `CS::FieldArea::IsEnableFastTravel` treats `-1` and `0` as no gate and
+    /// otherwise calls the event-flag manager with this raw flag id, so this is
+    /// intentionally not modeled as a closed enum.
     pub enable_fast_travel_event_flag: i32,
     unka4: [u8; 0x3c],
+    /// Menu text id used for the current map/place display name.
+    ///
+    /// This is a data-driven FMG/message id, not a closed native enum.
     pub map_place_name_id: i32,
+    /// Menu text id saved as the map name for persistence/UI restore.
+    ///
+    /// This is a data-driven FMG/message id, not a closed native enum.
     pub save_map_name_id: i32,
+    /// Current play-region param id.
+    ///
+    /// `GetPlayRegionParam` looks this up in `PlayRegionParam` data; the valid
+    /// set comes from param rows, not a fixed enum baked into the executable.
     pub current_play_region_id: u32,
     unkec: [u8; 0x5A4],
 }
