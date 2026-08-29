@@ -6,6 +6,7 @@ use windows::core::PCSTR;
 mod bundle;
 mod rva_jp;
 mod rva_ww;
+mod rva_ww_270;
 
 pub use bundle::RvaBundle;
 
@@ -15,6 +16,7 @@ use fromsoftware_shared::game_version::{GameVersion, LANG_ID_EN, LANG_ID_JP};
 enum ERGameVersion {
     Ww262,
     Jp2621,
+    Ww270,
 }
 
 impl GameVersion for ERGameVersion {
@@ -24,6 +26,7 @@ impl GameVersion for ERGameVersion {
         match (lang_id, version) {
             (LANG_ID_EN, "2.6.2.0") => Some(Self::Ww262),
             (LANG_ID_JP, "2.6.2.1") => Some(Self::Jp2621),
+            (LANG_ID_EN, "2.7.0.0") => Some(Self::Ww270),
             _ => None,
         }
     }
@@ -34,6 +37,7 @@ impl ERGameVersion {
         match self {
             Self::Ww262 => rva_ww::RVAS,
             Self::Jp2621 => rva_jp::RVAS,
+            Self::Ww270 => rva_ww_270::RVAS,
         }
     }
 }

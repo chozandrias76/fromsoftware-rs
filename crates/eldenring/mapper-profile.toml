@@ -351,9 +351,17 @@ pattern = "48 89 05 ${ ' } 48 83 c4 38 e9 ${}"
 captures = ["", "cs_system_step"]
 pattern = "48 89 05 ${ ' } 48 8b 0d [4] 48 85 c9 75"
 
+# 1.17 (2.7.0.0) emits a `nop` between the call and the vftable store, which
+# the old fixed `[4]` skip could not cross -- the field silently mapped to 0.
+# an alternation crosses either shape, and the `mov byte [rdi+0xb8], 0` that
+# follows the store keeps the match unique: without it, fifteen sibling
+# state-machine constructors match on both 2.6.2.0 and 2.7.0.0. With it the
+# match is unique on both, and on 2.6.2.0 it still yields 0x3d71580, the value
+# already checked in -- so the change is calibrated, not merely fitted.
+# (`[4-5]` would read better but pelite 0.10's Many(1) does not match here.)
 [[patterns]]
 captures = ["", "title_step_state_table"]
-pattern = "48 8d 15 ${ ' } e8 [4] 48 8d 05 [4] 48 89 07"
+pattern = "48 8d 15 ${ ' } e8 [4] ( 90 48 8d 05 | 48 8d 05 ) [4] 48 89 07 c6 87 b8 00 00 00 00"
 
 [[patterns]]
 captures = ["", "crypto_spi_registry"]
