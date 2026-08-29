@@ -28,7 +28,7 @@ pub const RVAS: RvaBundle = RvaBundle {
     cs_ez_state_talk_event_vmt: 0x2c02e18,
     cs_menu_man_imp_display_status_message: 0x7671f0,
     cs_phys_world_cast_ray: 0xc71d90,
-    cs_system_step: 0x3d6e278,
+    cs_system_step: 0x3d89700,
     csbullet_explosion_state_vmt: 0x2a28470,
     csbullet_fly_state_vmt: 0x2a28530,
     csbullet_nullstate_vmt: 0x2a2a350,

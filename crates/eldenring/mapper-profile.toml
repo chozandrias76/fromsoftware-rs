@@ -347,9 +347,18 @@ pattern = "48 8b 05 $ { ' } 48 8b 80 90 0d 00 00 c3"
 captures = ["", "game_data_man"]
 pattern = "48 89 05 ${ ' } 48 83 c4 38 e9 ${}"
 
+# The trailing `35` is the short jump's displacement, and it is the only thing
+# that makes this unique. Without it the pattern matches FIVE sites, and
+# MapperProfilePattern::find takes the first with no ambiguity check -- which on
+# 2.6.2.0 happened to land on the intended one and on 2.7.0.0 did not, yielding
+# 0x3d6e278: a real global, just a different one. That address is wrong in the
+# first generated 2.7.0.0 bundle. Site-for-site the correct counterpart of
+# 2.6.2.0's 0x3d85680 is 0x3d89700 (+0x4080, the same shift as its eight-byte
+# neighbour global_hinstance), which is what this pattern now returns -- and on
+# 2.6.2.0 it still returns 0x3d85680, the value already checked in.
 [[patterns]]
 captures = ["", "cs_system_step"]
-pattern = "48 89 05 ${ ' } 48 8b 0d [4] 48 85 c9 75"
+pattern = "48 89 05 ${ ' } 48 8b 0d [4] 48 85 c9 75 35"
 
 # 1.17 (2.7.0.0) emits a `nop` between the call and the vftable store, which
 # the old fixed `[4]` skip could not cross -- the field silently mapped to 0.
