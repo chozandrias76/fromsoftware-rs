@@ -43,13 +43,13 @@ pub const STATUS_MESSAGE_MENU_TEXT: i32 = 41;
 #[shared::singleton("CSMenuMan")]
 pub struct CSMenuManImp {
     vftable: usize,
-    menu_data: usize,
+    pub menu_data: usize,
     player_status_calculator: usize,
     unk18: [u8; 2],
     pub disable_mouse_cursor: bool,
     unk1b: [u8; 0x65],
     pub popup_menu: Option<NonNull<CSPopupMenu>>,
-    window_job: usize,
+    pub window_job: usize,
     /// States of UI elements, indexed by specific for each element ID.
     pub ui_states: [UIState; 0x46],
     unkd6: [u8; 0x5a],
@@ -122,7 +122,7 @@ pub struct CSPopupMenu {
     unk10: usize,
     unk18: usize,
     unk20: [u8; 0x90],
-    current_top_menu_job: usize,
+    pub current_top_menu_job: usize,
     unkb8: [u8; 0xb0],
     input_data: u64,
     unk170: [u8; 0x10],
@@ -305,6 +305,8 @@ pub enum SystemAnnounceViewModelState {
 
 #[cfg(test)]
 mod test {
+    use std::mem::{offset_of, size_of};
+
     use crate::cs::{
         AnnounceNotification, BackScreenData, CSMenuData, CSMenuGaitemUseState, CSMenuManImp,
         CSPlayerMenuCtrl, CSPopupMenu, FeSystemAnnounceView, FeSystemAnnounceViewModel,
@@ -323,5 +325,13 @@ mod test {
         assert_eq!(0x40, size_of::<FeSystemAnnounceViewModel>());
         assert_eq!(0x40, size_of::<AnnounceNotification>());
         assert_eq!(0xb68, size_of::<FeSystemAnnounceView>());
+    }
+
+    #[test]
+    fn public_layout_offsets_match_static_re() {
+        assert_eq!(0x08, offset_of!(CSMenuManImp, menu_data));
+        assert_eq!(0x80, offset_of!(CSMenuManImp, popup_menu));
+        assert_eq!(0x88, offset_of!(CSMenuManImp, window_job));
+        assert_eq!(0xb0, offset_of!(CSPopupMenu, current_top_menu_job));
     }
 }

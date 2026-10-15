@@ -127,6 +127,10 @@ class = "CS::CSThrowNode"
 vftable = "csthrow_node_vmt"
 
 [[vmts]]
+class = "CS::TitleStep"
+vftable = "title_step_vmt"
+
+[[vmts]]
 class = "CS::CSRideNode"
 vftable = "csride_node_vmt"
 
@@ -342,6 +346,31 @@ pattern = "48 8b 05 $ { ' } 48 8b 80 90 0d 00 00 c3"
 [[patterns]]
 captures = ["", "game_data_man"]
 pattern = "48 89 05 ${ ' } 48 83 c4 38 e9 ${}"
+
+# The trailing `35` is the short jump's displacement, and it is the only thing
+# that makes this unique. Without it the pattern matches FIVE sites, and
+# MapperProfilePattern::find takes the first with no ambiguity check -- which on
+# 2.6.2.0 happened to land on the intended one and on 2.7.0.0 did not, yielding
+# 0x3d6e278: a real global, just a different one. That address is wrong in the
+# first generated 2.7.0.0 bundle. Site-for-site the correct counterpart of
+# 2.6.2.0's 0x3d85680 is 0x3d89700 (+0x4080, the same shift as its eight-byte
+# neighbour global_hinstance), which is what this pattern now returns -- and on
+# 2.6.2.0 it still returns 0x3d85680, the value already checked in.
+[[patterns]]
+captures = ["", "cs_system_step"]
+pattern = "48 89 05 ${ ' } 48 8b 0d [4] 48 85 c9 75 35"
+
+# 1.17 (2.7.0.0) emits a `nop` between the call and the vftable store, which
+# the old fixed `[4]` skip could not cross -- the field silently mapped to 0.
+# an alternation crosses either shape, and the `mov byte [rdi+0xb8], 0` that
+# follows the store keeps the match unique: without it, fifteen sibling
+# state-machine constructors match on both 2.6.2.0 and 2.7.0.0. With it the
+# match is unique on both, and on 2.6.2.0 it still yields 0x3d71580, the value
+# already checked in -- so the change is calibrated, not merely fitted.
+# (`[4-5]` would read better but pelite 0.10's Many(1) does not match here.)
+[[patterns]]
+captures = ["", "title_step_state_table"]
+pattern = "48 8d 15 ${ ' } e8 [4] ( 90 48 8d 05 | 48 8d 05 ) [4] 48 89 07 c6 87 b8 00 00 00 00"
 
 [[patterns]]
 captures = ["", "crypto_spi_registry"]
