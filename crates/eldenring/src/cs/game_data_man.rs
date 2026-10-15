@@ -54,10 +54,10 @@ pub struct GameDataMan {
     pub bloodstain: OwnedPtr<BloodstainData>,
     pub bloodstain_entity_id: i32,
     pub game_settings: OwnedPtr<GameSettings>,
-    menu_system_save_load: usize,
-    menu_profile_save_load: usize,
-    key_config_save_load: usize,
-    profile_summary: usize,
+    pub menu_system_save_load: usize,
+    pub menu_profile_save_load: usize,
+    pub key_config_save_load: usize,
+    pub profile_summary: usize,
     pc_option_data: usize,
     unk88: [u8; 0x4],
     pub request_full_recovery: bool,
@@ -403,4 +403,19 @@ pub struct GameSettings {
     pub camera_auto_rotation: bool,
     /// Unused space, will allways be memset on deserialization
     pub unused_space: [u8; 0x110],
+}
+
+#[cfg(test)]
+mod tests {
+    use std::mem::offset_of;
+
+    use super::GameDataMan;
+
+    #[test]
+    fn public_layout_offsets_match_static_re() {
+        assert_eq!(0x60, offset_of!(GameDataMan, menu_system_save_load));
+        assert_eq!(0x68, offset_of!(GameDataMan, menu_profile_save_load));
+        assert_eq!(0x70, offset_of!(GameDataMan, key_config_save_load));
+        assert_eq!(0x78, offset_of!(GameDataMan, profile_summary));
+    }
 }

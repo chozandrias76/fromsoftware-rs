@@ -125,11 +125,9 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            {
-                let entry = self.0.next()?;
-                if let Some(entry) = entry.as_option() {
-                    return Some(entry);
-                }
+            let entry = self.0.next()?;
+            if let Some(entry) = entry.as_option() {
+                return Some(entry);
             }
         }
     }
@@ -178,11 +176,9 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            {
-                let entry = self.0.next()?;
-                if let Some(entry) = entry.as_option_mut() {
-                    return Some(entry);
-                }
+            let entry = self.0.next()?;
+            if let Some(entry) = entry.as_option_mut() {
+                return Some(entry);
             }
         }
     }
