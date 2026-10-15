@@ -1,0 +1,32 @@
+name: NON-AI license guard
+
+# Upstream (vswarte/fromsoftware-rs) relicensed to "MIT/Apache-2.0 NON-AI" in
+# 603814c (2026-10-12). This fork stays on MIT OR Apache-2.0 and takes upstream
+# only up to 59fbd3b. Runs on every branch, unlike rust.yml.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Refuse upstream's NON-AI relicensing
+        run: |
+          license_change=603814c3d18a25a1beda6d83ce4997d55dfe2eee
+          status=0
+          if git cat-file -e "$license_change^{commit}" 2>/dev/null &&
+            git merge-base --is-ancestor "$license_change" HEAD; then
+            echo "::error::History contains upstream's NON-AI license change (603814c). Merge upstream no further than 59fbd3b."
+            status=1
+          fi
+          if git ls-tree -r --name-only HEAD | grep -- '-NON-AI$'; then
+            echo "::error::Tree has a *-NON-AI license file."
+            status=1
+          fi
+          exit "$status"
